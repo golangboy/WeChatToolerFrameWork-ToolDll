@@ -460,7 +460,7 @@ void Hook()
 	if (weChatWin != 0) {
 
 		
-		MessageBoxA(0, "Hook", 0, 0);
+		MessageBoxA(0, "启动成功", 0, 0);
 		
 		callBack_ImageMessage.srcFunction = (DWORD)weChatWin + 0x47A010;
 		DetourRestoreAfterWith();
