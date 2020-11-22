@@ -41,7 +41,46 @@ void setCallBack_TextMessage(dstTextFunc callBackFunction) {
 
 
 
-void Call_SendFileMessage(const wstring wxid, const wstring imgPath) {
+void __stdcall Call_SendFileMessage(wchar_t* wxid,  wchar_t* imgPath) {
+	struct UnicodeStruct
+	{
+		wchar_t* ptr;
+		int len;
+	};
+	UnicodeStruct* id = new UnicodeStruct();
+	id->ptr = wxid;
+	id->len = lstrlenW(wxid);
+	UnicodeStruct* msg = new UnicodeStruct();
+	msg->ptr = imgPath;
+	msg->len = lstrlenW(imgPath);
+	char* buff = new char[10000]();
+	int function = 0x2E6F90 + (int)weChatWin;
+	int constNumber = *((int*)(0x2E46B8 + (int)weChatWin));
+	__asm {
+
+		pushad;
+		pushfd;
+
+		push msg;
+		push msg;
+		push id;
+		mov ecx, constNumber;
+		push buff;
+		call function
+
+		popfd;
+		popad;
+
+
+	}
+
+	delete[]buff;
+	delete id;
+	delete msg;
+}
+
+/*
+void Call_SendPicMessageRight(const wstring wxid, const wstring imgPath) {
 	struct UnicodeStruct
 	{
 		wchar_t* ptr;
@@ -67,28 +106,29 @@ void Call_SendFileMessage(const wstring wxid, const wstring imgPath) {
 		push buff;
 		call function
 
-		popfd;
+			popfd;
 		popad;
 	}
 
 	delete[]buff;
 }
+*/
 
-
-void Call_SendTextMessage(wstring wxid, wstring msg)
+void __stdcall Call_SendTextMessage(wchar_t* wxid, wchar_t* msg)
 {
+
 	struct UnicodeStruct
 	{
 		wchar_t* ptr;
 		int len;
 	};
 	UnicodeStruct* id = new UnicodeStruct();
-	id->ptr = (wchar_t*)wxid.data();
-	id->len = wxid.size();
+	id->ptr = wxid;
+	id->len = lstrlenW(wxid);
 	UnicodeStruct* text = new UnicodeStruct();
-	text->ptr = (wchar_t*)msg.data();
-	text->len = msg.size();
-	char buff[2000]{ 0 };
+	text->ptr = msg;
+	text->len = lstrlenW(msg);
+	char buff[4000]{ 0 };
 	int function = 0x2EB4E0 + (int)weChatWin;
 	__asm {
 		pushad;
@@ -105,8 +145,11 @@ void Call_SendTextMessage(wstring wxid, wstring msg)
 		popfd;
 		popad;
 	}
-
+	delete id;
+	delete msg;
+		
 }
+
 
 
 map<string, string> wxidImgPath;
@@ -114,6 +157,9 @@ void __stdcall Mid_beHook_ImageMessage(int ptrData, int len,int ptr)
 {
 	//ptr -> img_path(unicode)
 	//ptr+4 path_len
+	if (0 == canReadWrite((LPVOID)ptr))
+		return;
+
 	wchar_t* imgPath = (wchar_t*)(*((int*)(ptr)));
 	//char* dataPtr = (char*)(*((int*)(ptr+0x28)));
 	//int *ptrdataLen = (int*)(*((int*)(ptr+0x28+0x4)));
@@ -169,7 +215,9 @@ __declspec(naked) int Mid_beHook_ImageMessage_Help()
 
 }
 void __stdcall Mid_beHook_ImageMessage_Help2(wchar_t* imgPath,wchar_t* wxid) {
-	wxidImgPath[WString2String(imgPath)] = WString2String(wxid);
+	if (canReadWrite(imgPath) && canReadWrite(wxid)) {
+		wxidImgPath[WString2String(imgPath)] = WString2String(wxid);
+	}
 }
 __declspec(naked) void  Mid_beHook_ImageMessage_Jmp(int* ptrUnicodeWxid, int b, int c, int d, int e, int f, int g, int h, int i, int j, int k, int l, int m, int* ptrUnicodeImgPath)
 {
@@ -385,7 +433,8 @@ __declspec(naked)  void Mid_beHook_VoiceMessage_Jmp(int a)
 
 
 void __stdcall Mid_beHook_TextMessage(const wstring wxid, const wstring msg,const int type) {
-	//Call_SendTextMessage(wxid, msg);
+	//Call_SendTextMessage(  L"filehelper",L"filehelper");
+	//Call_SendPicMessageRight((wchar_t*)L"filehelper", (wchar_t*)L"d:/4.png");
 	if (callBack_TextMessage.userFunction != 0) {
 		//MessageBoxW(0, msg.data(), 0, 0);
 		((dstTextFunc)(callBack_TextMessage.userFunction))(wxid.data(), msg.data(),type);
@@ -412,7 +461,7 @@ void Hook()
 
 		
 		MessageBoxA(0, "Hook", 0, 0);
-
+		
 		callBack_ImageMessage.srcFunction = (DWORD)weChatWin + 0x47A010;
 		DetourRestoreAfterWith();
 		DetourTransactionBegin();
@@ -431,6 +480,7 @@ void Hook()
 		DetourUpdateThread(GetCurrentThread());
 		DetourAttach((PVOID*)&dwHookedImageHelpFunc, (PVOID)Mid_beHook_ImageMessage_Help);
 		DetourTransactionCommit();
+		
 		
 
 		
