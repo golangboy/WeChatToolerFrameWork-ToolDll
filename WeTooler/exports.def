@@ -1,6 +1,6 @@
 LIBRARY WeTooler
 EXPORTS 
-Enter
+
 Call_SendFileMessage
 Call_SendTextMessage
 setCallBack_ImageMessage

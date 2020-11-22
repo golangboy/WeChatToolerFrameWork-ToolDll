@@ -73,7 +73,7 @@
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <LinkIncremental>true</LinkIncremental>
     <OutDir>C:\Program Files (x86)\Tencent\WeChat\</OutDir>
-    <TargetName>Patch</TargetName>
+    <TargetName>Tool</TargetName>
     <LibraryPath>$(LibraryPath)</LibraryPath>
     <IncludePath>$(IncludePath)</IncludePath>
   </PropertyGroup>

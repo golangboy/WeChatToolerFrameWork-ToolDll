@@ -18,7 +18,7 @@ typedef struct {
 /// </summary>
 typedef void(__stdcall* dstImageFunc)(const wchar_t*wxId, const wchar_t*imgPath);
 typedef void(__stdcall* dstVoiceFunc)(const wchar_t* wxId, const char*ptrData,const int dataLen);
-typedef void(__stdcall* dstTextFunc)(const wchar_t* wxId, const wchar_t* msg);
+typedef void(__stdcall* dstTextFunc)(const wchar_t* wxId, const wchar_t* msg,const int type);
 
 CallBack callBack_ImageMessage, callBack_TextMessage, callBack_VoiceMessage;
 
@@ -121,10 +121,14 @@ void __stdcall Mid_beHook_ImageMessage(int ptrData, int len,int ptr)
 	if (wxidImgPath.find(sImgPath) != wxidImgPath.end()) {
 		//MessageBoxA(0, sImgPath.data(), wxidImgPath[sImgPath].data(), 0);
 		string imgPath = writeToTempFile("Img", "Img_", ".jpg", (char*)ptrData, len);
-		Call_SendFileMessage( String2WString(wxidImgPath[sImgPath]) , String2WString(imgPath));
+		//Call_SendFileMessage( String2WString(wxidImgPath[sImgPath]) , String2WString(imgPath));
 
 		if (callBack_ImageMessage.userFunction != 0) {
-			((dstImageFunc)(callBack_ImageMessage.userFunction))(String2WString(wxidImgPath[sImgPath]).data(), String2WString(imgPath).data());
+			char buff[MAX_PATH];
+			GetCurrentDirectoryA(MAX_PATH, buff);
+			string tmp = string(buff) + "\\";
+			tmp += imgPath;
+			((dstImageFunc)(callBack_ImageMessage.userFunction))(String2WString(wxidImgPath[sImgPath]).data(),   String2WString(tmp).data());
 		}
 		wxidImgPath.erase(sImgPath);
 	}
@@ -380,10 +384,11 @@ __declspec(naked)  void Mid_beHook_VoiceMessage_Jmp(int a)
 }
 
 
-void __stdcall Mid_beHook_TextMessage(const wstring wxid, const wstring msg) {
+void __stdcall Mid_beHook_TextMessage(const wstring wxid, const wstring msg,const int type) {
 	//Call_SendTextMessage(wxid, msg);
 	if (callBack_TextMessage.userFunction != 0) {
-		((dstTextFunc)(callBack_TextMessage.userFunction))(wxid.data(), msg.data());
+		//MessageBoxW(0, msg.data(), 0, 0);
+		((dstTextFunc)(callBack_TextMessage.userFunction))(wxid.data(), msg.data(),type);
 	}
 }
 int __stdcall Mid_beHook_TextMessage_Help(int a, int b, int c) {
@@ -392,7 +397,7 @@ int __stdcall Mid_beHook_TextMessage_Help(int a, int b, int c) {
 		mov e, ebx
 	}
 	if (canReadWrite(e)) {
-		Mid_beHook_TextMessage((LPCWSTR)(*(int*)(*e + 0x40)), (LPCWSTR)(*(int*)(*e + 0x68)));
+		Mid_beHook_TextMessage((LPCWSTR)(*(int*)(*e + 0x40)), (LPCWSTR)(*(int*)(  (int)(*e) + 0x68)), (*((int*)((int)(*e) + 0x68 + 8))));
 	}
 
 	typedef int(__stdcall* ptrSrc)(int, int, int);
