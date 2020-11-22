@@ -397,7 +397,7 @@ int __stdcall Mid_beHook_TextMessage_Help(int a, int b, int c) {
 		mov e, ebx
 	}
 	if (canReadWrite(e)) {
-		Mid_beHook_TextMessage((LPCWSTR)(*(int*)(*e + 0x40)), (LPCWSTR)(*(int*)(  (int)(*e) + 0x68)), (*((int*)((int)(*e) + 0x68 + 8))));
+		Mid_beHook_TextMessage((LPCWSTR)(*(int*)(*e + 0x40)), (LPCWSTR)(*(int*)(  (int)(*e) + 0x68)), (*((int*)((int)(*e) + 0x68 +0x20))));
 	}
 
 	typedef int(__stdcall* ptrSrc)(int, int, int);
